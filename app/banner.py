@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 import random
 
-router = APIRouter(prefix="/banner", tags=["Banner"])
+router = APIRouter(prefix="/api/banner", tags=["Banner"])
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 
