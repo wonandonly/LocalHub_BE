@@ -34,10 +34,8 @@ def load_banner_data():
             banner = {
                 "contentId": item["contentid"],
                 "image": item["firstimage"],
-                "image2": item["firstimage2"],
                 "title": item["title"],
                 "address": item["addr1"],
-                "zip": item["zipcode"]
             }
 
             if content_type in VIEW_TYPES:
@@ -70,3 +68,28 @@ def get_random_banner(category: str):
     return random.choice(BANNERS[category])
 
 #볼거리 배너 GET /banner/view 즐길거리 배너 GET /banner/play
+
+@router.get("/detail/{content_id}")
+def get_detail(content_id: str):
+
+    for json_file in DATA_DIR.glob("*.json"):
+        with open(json_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        for item in data.get("items", []):
+
+            if item["contentid"] == content_id:
+
+                return {
+                    "contentId": item["contentid"],
+                    "title": item["title"],
+                    "image": item["firstimage"],
+                    "image2": item["firstimage2"],
+                    "address": item["addr1"],
+                    "zipcode": item["zipcode"]
+                }
+
+    raise HTTPException(
+        status_code=404,
+        detail="관광지를 찾을 수 없습니다."
+    )
