@@ -28,14 +28,16 @@ def load_banner_data():
         for item in data.get("items", []):
 
             # 이미지 없는 데이터 제외
-            if not item.get("firstimage"):
+            if not item.get("firstimage") or not item.get("firstimage2"):
                 continue
 
             banner = {
                 "contentId": item["contentid"],
                 "image": item["firstimage"],
+                "image2": item["firstimage2"],
                 "title": item["title"],
-                "address": item["addr1"]
+                "address": item["addr1"],
+                "zip": item["zipcode"]
             }
 
             if content_type in VIEW_TYPES:
