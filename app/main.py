@@ -54,8 +54,8 @@ def list_posts(db: Session = Depends(get_db)) -> list[dict]:
             "title": post.title,
             "content": post.content,
             "view_count": post.view_count,
-            "created_at": post.created_at,
-            "comments": [{"id": c.id, "content": c.content, "created_at": c.created_at} for c in post.comments],
+            "created_at": post.created_at.strftime("%Y.%m.%d %H:%M"),
+            "comments": [{"id": c.id, "content": c.content, "created_at": c.created_at.strftime("%Y.%m.%d %H:%M")} for c in post.comments],
         }
         for post in posts
     ]
@@ -81,7 +81,7 @@ def create_post(payload: PostCreate, db: Session = Depends(get_db)) -> dict:
         "title": post.title,
         "content": post.content,
         "view_count": post.view_count,
-        "created_at": post.created_at,
+        "created_at": post.created_at.strftime("%Y.%m.%d %H:%M"),
         "comments": [],
     }
 
@@ -100,8 +100,8 @@ def get_post(post_id: int, db: Session = Depends(get_db)) -> dict:
         "title": post.title,
         "content": post.content,
         "view_count": post.view_count,
-        "created_at": post.created_at,
-        "comments": [{"id": c.id, "content": c.content, "created_at": c.created_at} for c in post.comments],
+        "created_at": post.created_at.strftime("%Y.%m.%d %H:%M"),
+        "comments": [{"id": c.id, "content": c.content, "created_at": c.created_at.strftime("%Y.%m.%d %H:%M")} for c in post.comments],
     }
 
 
@@ -122,8 +122,8 @@ def update_post(post_id: int, payload: PostUpdate, db: Session = Depends(get_db)
         "title": post.title,
         "content": post.content,
         "view_count": post.view_count,
-        "created_at": post.created_at,
-        "comments": [{"id": c.id, "content": c.content, "created_at": c.created_at} for c in post.comments],
+        "created_at": post.created_at.strftime("%Y.%m.%d %H:%M"),
+        "comments": [{"id": c.id, "content": c.content, "created_at": c.created_at.strftime("%Y.%m.%d %H:%M")} for c in post.comments],
     }
 
 
@@ -150,7 +150,7 @@ def create_comment(post_id: int, payload: CommentCreate, db: Session = Depends(g
     db.add(comment)
     db.commit()
     db.refresh(comment)
-    return {"id": comment.id, "content": comment.content, "created_at": comment.created_at}
+    return {"id": comment.id, "content": comment.content, "created_at": comment.created_at.strftime("%Y.%m.%d %H:%M")}
 
 @app.post("/api/chat", response_model=ChatResponse)
 def chat(payload: ChatRequest):

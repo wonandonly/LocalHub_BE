@@ -27,7 +27,7 @@ class CommentCreate(BaseModel):
 class CommentOut(BaseModel):
     id: int
     content: str
-    created_at: datetime
+    created_at: str
 
 
 class PostOut(BaseModel):
@@ -36,7 +36,7 @@ class PostOut(BaseModel):
     content: str
     
     view_count: int
-    created_at: datetime
+    created_at: str
     comments: list[CommentOut] = Field(default_factory=list)
 
 
