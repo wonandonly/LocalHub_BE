@@ -168,7 +168,7 @@ def chat(payload: ChatRequest):
             )
 
             response = client.responses.create(
-                model="gpt-4o-mini",
+                model="gpt-5-mini",
                 input=[
                     {
                         "role": "system",
