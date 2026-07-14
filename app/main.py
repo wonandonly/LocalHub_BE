@@ -44,6 +44,29 @@ def get_db() -> Generator[Session, None, None]:
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
+@app.get("/api/posts/popular", response_model=list[PostOut])
+def popular_posts(db: Session = Depends(get_db)) -> list[dict]:
+
+    posts = db.query(Post).order_by(Post.view_count.desc()).all()
+
+    return [
+        {
+            "id": post.id,
+            "title": post.title,
+            "content": post.content,
+            "view_count": post.view_count,
+            "created_at": post.created_at.strftime("%Y.%m.%d %H:%M"),
+            "comments": [
+                {
+                    "id": c.id,
+                    "content": c.content,
+                    "created_at": c.created_at.strftime("%Y.%m.%d %H:%M")
+                }
+                for c in post.comments
+            ],
+        }
+        for post in posts
+    ]
 
 @app.get("/api/posts", response_model=list[PostOut])
 def list_posts(db: Session = Depends(get_db)) -> list[dict]:
@@ -172,7 +195,7 @@ def chat(payload: ChatRequest):
                 input=[
                     {
                         "role": "system",
-                        "content": "당신은 공공데이터 기반 지역 정보 챗봇입니다. 짧고 친절하게 답변하세요."
+                        "content": "당신은 서울의 관광지(볼거리, 즐길거리) 정보 챗봇입니다. 관련된 내용에 대해서만 짧고 친절하게 답변하세요."
                     },
                     {
                         "role": "user",
@@ -188,3 +211,4 @@ def chat(payload: ChatRequest):
             reply = f"오류가 발생했습니다. ({e})"
 
     return {"reply": reply}
+
