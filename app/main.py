@@ -1,3 +1,4 @@
+import os
 from typing import Generator
 
 from fastapi import Depends, FastAPI, HTTPException, status
@@ -5,8 +6,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from app.deps import SessionLocal, engine
-from app.models import Base, Comment, Location, Post
-from app.schemas import CommentCreate, CommentOut, LocationCreate, LocationOut, PostCreate, PostDelete, PostOut, PostUpdate
+from app.models import Base, Comment, Post
+from app.schemas import ChatRequest, ChatResponse, CommentCreate, CommentOut, PostCreate, PostDelete, PostOut, PostUpdate
+from dotenv import load_dotenv
+
+from openai import OpenAI
+
+load_dotenv()
+#print(os.getenv("OPENAI_API_KEY"))
 
 # Import models so SQLAlchemy can create the tables on startup.
 import app.models  # noqa: F401
@@ -36,17 +43,6 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/api/locations", response_model=LocationOut, status_code=status.HTTP_201_CREATED)
-def create_location(payload: LocationCreate, db: Session = Depends(get_db)) -> dict:
-    location = db.query(Location).filter(Location.name == payload.name).first()
-    if location is None:
-        location = Location(name=payload.name)
-        db.add(location)
-        db.commit()
-        db.refresh(location)
-    return {"id": location.id, "name": location.name}
-
-
 @app.get("/api/posts", response_model=list[PostOut])
 def list_posts(db: Session = Depends(get_db)) -> list[dict]:
     posts = db.query(Post).order_by(Post.id.desc()).all()
@@ -55,10 +51,8 @@ def list_posts(db: Session = Depends(get_db)) -> list[dict]:
             "id": post.id,
             "title": post.title,
             "content": post.content,
-            "category": post.category,
             "view_count": post.view_count,
             "created_at": post.created_at,
-            "location_id": post.location_id,
             "comments": [{"id": c.id, "content": c.content, "created_at": c.created_at} for c in post.comments],
         }
         for post in posts
@@ -67,38 +61,25 @@ def list_posts(db: Session = Depends(get_db)) -> list[dict]:
 
 @app.post("/api/posts", response_model=PostOut, status_code=status.HTTP_201_CREATED)
 def create_post(payload: PostCreate, db: Session = Depends(get_db)) -> dict:
-    location_id = payload.location_id
-    if payload.location_id is None:
-        location = db.query(Location).filter(Location.name == "서울").first()
-        if location is None:
-            location = Location(name="서울")
-            db.add(location)
-            db.commit()
-            db.refresh(location)
-        location_id = location.id
-
-    location = db.query(Location).filter(Location.id == location_id).first()
-    if location is None:
-        raise HTTPException(status_code=404, detail="location not found")
-
+    # 1. location 관련 로직을 모두 제거하고 바로 Post 객체를 생성합니다.
     post = Post(
         title=payload.title,
         content=payload.content,
-        category=payload.category,
         password=payload.password,
-        location_id=location_id,
     )
+    
+    # 2. DB에 저장 및 커밋
     db.add(post)
     db.commit()
     db.refresh(post)
+    
+    # 3. 반환값 매핑 (기존과 동일)
     return {
         "id": post.id,
         "title": post.title,
         "content": post.content,
-        "category": post.category,
         "view_count": post.view_count,
         "created_at": post.created_at,
-        "location_id": post.location_id,
         "comments": [],
     }
 
@@ -116,10 +97,8 @@ def get_post(post_id: int, db: Session = Depends(get_db)) -> dict:
         "id": post.id,
         "title": post.title,
         "content": post.content,
-        "category": post.category,
         "view_count": post.view_count,
         "created_at": post.created_at,
-        "location_id": post.location_id,
         "comments": [{"id": c.id, "content": c.content, "created_at": c.created_at} for c in post.comments],
     }
 
@@ -140,10 +119,8 @@ def update_post(post_id: int, payload: PostUpdate, db: Session = Depends(get_db)
         "id": post.id,
         "title": post.title,
         "content": post.content,
-        "category": post.category,
         "view_count": post.view_count,
         "created_at": post.created_at,
-        "location_id": post.location_id,
         "comments": [{"id": c.id, "content": c.content, "created_at": c.created_at} for c in post.comments],
     }
 
@@ -172,3 +149,40 @@ def create_comment(post_id: int, payload: CommentCreate, db: Session = Depends(g
     db.commit()
     db.refresh(comment)
     return {"id": comment.id, "content": comment.content, "created_at": comment.created_at}
+
+@app.post("/api/chat", response_model=ChatResponse)
+def chat(payload: ChatRequest):
+
+    message = payload.message.strip()
+
+    reply = "죄송합니다. 답변을 생성하지 못했습니다."
+
+    if os.getenv("OPENAI_API_KEY"):
+        try:
+            import openai
+
+            client = openai.OpenAI(
+                api_key=os.getenv("OPENAI_API_KEY")
+            )
+
+            response = client.responses.create(
+                model="gpt-4o-mini",
+                input=[
+                    {
+                        "role": "system",
+                        "content": "당신은 공공데이터 기반 지역 정보 챗봇입니다. 짧고 친절하게 답변하세요."
+                    },
+                    {
+                        "role": "user",
+                        "content": message
+                    }
+                ]
+            )
+
+            if response.output_text:
+                reply = response.output_text
+
+        except Exception as e:
+            reply = f"오류가 발생했습니다. ({e})"
+
+    return {"reply": reply}

@@ -16,17 +16,19 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 def ensure_schema() -> None:
     from app.models import Base
 
-    Base.metadata.create_all(bind=engine)
-
     db_path = Path(__file__).resolve().parent.parent / "data" / "board.db"
-    if not db_path.exists():
-        return
+    db_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with sqlite3.connect(db_path) as conn:
-        columns = {row[1] for row in conn.execute("PRAGMA table_info(posts)").fetchall()}
-        if "location_id" not in columns:
-            conn.execute("ALTER TABLE posts ADD COLUMN location_id INTEGER NOT NULL DEFAULT 1")
-        conn.commit()
+    if db_path.exists():
+        with sqlite3.connect(db_path) as conn:
+            tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+            if "posts" in tables:
+                columns = {row[1] for row in conn.execute("PRAGMA table_info(posts)").fetchall()}
+                if "location_id" in columns or "category" in columns:
+                    conn.execute("DROP TABLE posts")
+                    conn.commit()
+
+    Base.metadata.create_all(bind=engine)
 
 
 ensure_schema()
