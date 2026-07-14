@@ -32,23 +32,3 @@ FastAPI + SQLite 기반 게시판 CRUD 백엔드 프로젝트입니다.
 ```bash
 pytest -q
 ```
-
-## ERD
-erDiagram
-    POSTS {
-        int id PK
-        string title
-        text content
-        string password
-        int view_count
-        datetime created_at
-    }
-
-    COMMENTS {
-        int id PK
-        text content
-        datetime created_at
-        int post_id FK
-    }
-
-    POSTS ||--o{ COMMENTS : has
