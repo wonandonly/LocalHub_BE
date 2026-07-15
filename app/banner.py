@@ -31,11 +31,22 @@ def load_banner_data():
             if not item.get("firstimage") or not item.get("firstimage2"):
                 continue
 
+            mapx = item.get("mapx")
+            mapy = item.get("mapy")
+
             banner = {
                 "contentId": item["contentid"],
                 "image": item["firstimage"],
+                "image2": item["firstimage2"],
                 "title": item["title"],
                 "address": item["addr1"],
+                "mapx": mapx,
+                "mapy": mapy,
+                "googleMapUrl": (
+                    f"https://www.google.com/maps/search/?api=1&query={mapy},{mapx}"
+                    if mapx and mapy
+                    else None
+                )
             }
 
             if content_type in VIEW_TYPES:
@@ -80,15 +91,24 @@ def get_detail(content_id: str):
 
             if item["contentid"] == content_id:
 
+                mapx = item.get("mapx")
+                mapy = item.get("mapy")
+
                 return {
                     "contentId": item["contentid"],
                     "title": item["title"],
                     "image": item["firstimage"],
                     "image2": item["firstimage2"],
                     "address": item["addr1"],
-                    "zipcode": item["zipcode"]
+                    "zipcode": item["zipcode"],
+                    "mapx": mapx,
+                    "mapy": mapy,
+                    "googleMapUrl": (
+                        f"https://www.google.com/maps/search/?api=1&query={mapy},{mapx}"
+                        if mapx and mapy
+                        else None
+                    )
                 }
-
     raise HTTPException(
         status_code=404,
         detail="관광지를 찾을 수 없습니다."
