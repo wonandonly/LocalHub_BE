@@ -30,7 +30,11 @@ class Comment(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(
+        DateTime,
+        default=lambda: datetime.now(KST).replace(tzinfo=None),
+        nullable=False
+    )
     post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
 
     post = relationship("Post", back_populates="comments")
