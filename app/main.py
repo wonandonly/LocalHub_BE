@@ -18,9 +18,12 @@ load_dotenv()
 # Import models so SQLAlchemy can create the tables on startup.
 import app.models  # noqa: F401
 from app.banner import router as banner_router
+from app.place import router as place_router
+
 
 app = FastAPI(title="LocalHub Board API")
 app.include_router(banner_router)
+app.include_router(place_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
