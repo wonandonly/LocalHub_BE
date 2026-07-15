@@ -36,6 +36,7 @@ class PostOut(BaseModel):
     content: str
     
     view_count: int
+    comment_count: int
     created_at: str
     comments: list[CommentOut] = Field(default_factory=list)
 

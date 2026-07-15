@@ -55,6 +55,37 @@ def popular_posts(db: Session = Depends(get_db)) -> list[dict]:
             "title": post.title,
             "content": post.content,
             "view_count": post.view_count,
+            "comment_count": len(post.comments),
+            "created_at": post.created_at.strftime("%Y.%m.%d %H:%M"),
+            "comments": [
+                {
+                    "id": c.id,
+                    "content": c.content,
+                    "created_at": c.created_at.strftime("%Y.%m.%d %H:%M")
+                }
+                for c in post.comments
+            ],
+        }
+        for post in posts
+    ]
+
+@app.get("/api/posts/popular2", response_model=list[PostOut])
+def popular_comment_posts(db: Session = Depends(get_db)) -> list[dict]:
+
+    posts = db.query(Post).all()
+
+    posts.sort(
+        key=lambda post: len(post.comments),
+        reverse=True
+    )
+
+    return [
+        {
+            "id": post.id,
+            "title": post.title,
+            "content": post.content,
+            "view_count": post.view_count,
+            "comment_count": len(post.comments),
             "created_at": post.created_at.strftime("%Y.%m.%d %H:%M"),
             "comments": [
                 {
@@ -77,6 +108,7 @@ def list_posts(db: Session = Depends(get_db)) -> list[dict]:
             "title": post.title,
             "content": post.content,
             "view_count": post.view_count,
+            "comment_count": len(post.comments),
             "created_at": post.created_at.strftime("%Y.%m.%d %H:%M"),
             "comments": [{"id": c.id, "content": c.content, "created_at": c.created_at.strftime("%Y.%m.%d %H:%M")} for c in post.comments],
         }
