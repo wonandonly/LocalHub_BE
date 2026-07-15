@@ -135,6 +135,7 @@ def create_post(payload: PostCreate, db: Session = Depends(get_db)) -> dict:
         "id": post.id,
         "title": post.title,
         "content": post.content,
+        "comment_count": 0,
         "view_count": post.view_count,
         "created_at": post.created_at.strftime("%Y.%m.%d %H:%M"),
         "comments": [],
@@ -155,6 +156,7 @@ def get_post(post_id: int, db: Session = Depends(get_db)) -> dict:
         "title": post.title,
         "content": post.content,
         "view_count": post.view_count,
+        "comment_count": len(post.comments),
         "created_at": post.created_at.strftime("%Y.%m.%d %H:%M"),
         "comments": [{"id": c.id, "content": c.content, "created_at": c.created_at.strftime("%Y.%m.%d %H:%M")} for c in post.comments],
     }
@@ -177,6 +179,7 @@ def update_post(post_id: int, payload: PostUpdate, db: Session = Depends(get_db)
         "title": post.title,
         "content": post.content,
         "view_count": post.view_count,
+        "comment_count": len(post.comments),
         "created_at": post.created_at.strftime("%Y.%m.%d %H:%M"),
         "comments": [{"id": c.id, "content": c.content, "created_at": c.created_at.strftime("%Y.%m.%d %H:%M")} for c in post.comments],
     }
